@@ -1,46 +1,43 @@
 import streamlit as st
-from config import Config
-from helpers.llm_helper import chat, stream_parser
+import random
+import time
 
-st.set_page_config(
-    page_title=Config.PAGE_TITLE,
-    initial_sidebar_state="expanded"
-)
 
-st.title(Config.PAGE_TITLE)
+# Streamed response emulator
+def response_generator():
+    response = random.choice(
+        [
+            "Hello there! How can I assist you today?",
+            "Hi, human! Is there anything I can help you with?",
+            "Do you need help?",
+        ]
+    )
+    for word in response.split():
+        yield word + " "
+        time.sleep(0.05)
 
-# sets up sidebar nav widgets
-with st.sidebar:   
-    st.markdown("# Chat Options")
-    
-    # widget - https://docs.streamlit.io/library/api-reference/widgets/st.selectbox
-    model = st.selectbox('What model would you like to use?', Config.OLLAMA_MODELS)
 
-# checks for existing messages in session state
-# https://docs.streamlit.io/library/api-reference/session-state
+st.title("Simple chat")
+
+# Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat messages from session state
-# https://docs.streamlit.io/library/api-reference/chat/st.chat_message
+# Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if user_prompt := st.chat_input("What would you like to ask?"):
-    # Display user prompt in chat message widget
+# Accept user input
+if prompt := st.chat_input("What is up?"):
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    # Display user message in chat message container
     with st.chat_message("user"):
-        st.markdown(user_prompt)
+        st.markdown(prompt)
 
-    # adds user's prompt to session state
-    st.session_state.messages.append({"role": "user", "content": user_prompt})
-
-    with st.spinner('Generating response...'):
-        # retrieves response from model
-        llm_stream = chat(user_prompt, model=model)
-
-        # streams the response back to the screen
-        stream_output = st.write_stream(stream_parser(llm_stream))
-
-        # appends response to the message list
-        st.session_state.messages.append({"role": "assistant", "content": stream_output})
+    # Display assistant response in chat message container
+    with st.chat_message("assistant"):
+        response = st.write_stream(response_generator())
+    # Add assistant response to chat history
+    st.session_state.messages.append({"role": "assistant", "content": response})
