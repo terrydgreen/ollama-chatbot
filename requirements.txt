@@ -1,2 +1,3 @@
 ollama
 streamlit
+mistral-llm:latest
