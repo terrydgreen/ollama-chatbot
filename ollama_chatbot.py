@@ -16,7 +16,7 @@ if prompt := st.chat_input("What can I help you with?"):
 		st.write(prompt)
 
 	with st.chat_message("assistant"):
-		response = ollama.chat(model='gemma2',
+		response = ollama.chat(model='mistral-llm',
 			messages=[
 				{"role": m["role"], "content": m["content"]}
 					for m in st.session_state.messages
